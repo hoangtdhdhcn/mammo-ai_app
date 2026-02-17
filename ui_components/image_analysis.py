@@ -163,17 +163,66 @@ class ImageAnalysisWidget(QWidget):
         display_group = QGroupBox("Image Display")
         display_layout = QVBoxLayout()
         
-        # Image container with scroll
-        scroll_area = QScrollArea()
-        scroll_area.setWidgetResizable(True)
-        scroll_area.setStyleSheet("QScrollArea { border: 1px solid #5a5a5a; }")
+        # Create horizontal layout for side-by-side images
+        images_layout = QHBoxLayout()
         
-        self.image_container = QLabel()
-        self.image_container.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.image_container.setMinimumSize(400, 400)
-        scroll_area.setWidget(self.image_container)
+        # Original Image Container
+        original_frame = QFrame()
+        original_frame.setFrameStyle(QFrame.Shape.Box | QFrame.Shadow.Raised)
+        original_frame.setStyleSheet("QFrame { border: 1px solid #5a5a5a; }")
+        original_layout = QVBoxLayout(original_frame)
         
-        display_layout.addWidget(scroll_area)
+        self.original_label = QLabel("Original Image")
+        self.original_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.original_label.setStyleSheet("font-weight: bold; color: #333333;")
+        
+        self.original_scroll = QScrollArea()
+        self.original_scroll.setWidgetResizable(True)
+        self.original_scroll.setStyleSheet("QScrollArea { border: 1px solid #cccccc; }")
+        
+        self.original_container = QLabel()
+        self.original_container.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.original_container.setMinimumSize(400, 400)  # Reduced from 500x500 to 400x400 (0.8x)
+        self.original_container.setMaximumSize(640, 640)  # Reduced from 800x800 to 640x640 (0.8x)
+        self.original_container.setText("No image loaded")
+        self.original_container.setStyleSheet("background-color: #f0f0f0; border: 1px dashed #cccccc;")
+        
+        self.original_scroll.setWidget(self.original_container)
+        
+        original_layout.addWidget(self.original_label)
+        original_layout.addWidget(self.original_scroll)
+        
+        # Result Image Container
+        result_frame = QFrame()
+        result_frame.setFrameStyle(QFrame.Shape.Box | QFrame.Shadow.Raised)
+        result_frame.setStyleSheet("QFrame { border: 1px solid #5a5a5a; }")
+        result_layout = QVBoxLayout(result_frame)
+        
+        self.result_label = QLabel("Analysis Result (with Bounding Boxes)")
+        self.result_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.result_label.setStyleSheet("font-weight: bold; color: #333333;")
+        
+        self.result_scroll = QScrollArea()
+        self.result_scroll.setWidgetResizable(True)
+        self.result_scroll.setStyleSheet("QScrollArea { border: 1px solid #cccccc; }")
+        
+        self.result_container = QLabel()
+        self.result_container.setAlignment(Qt.AlignmentFlag.AlignCenter)
+        self.result_container.setMinimumSize(400, 400)  # Reduced from 500x500 to 400x400 (0.8x)
+        self.result_container.setMaximumSize(640, 640)  # Reduced from 800x800 to 640x640 (0.8x)
+        self.result_container.setText("Analysis result will appear here")
+        self.result_container.setStyleSheet("background-color: #f0f0f0; border: 1px dashed #cccccc;")
+        
+        self.result_scroll.setWidget(self.result_container)
+        
+        result_layout.addWidget(self.result_label)
+        result_layout.addWidget(self.result_scroll)
+        
+        # Add both image containers to the layout
+        images_layout.addWidget(original_frame, 1)
+        images_layout.addWidget(result_frame, 1)
+        
+        display_layout.addLayout(images_layout)
         display_group.setLayout(display_layout)
         
         right_layout.addWidget(display_group)
@@ -267,8 +316,8 @@ class ImageAnalysisWidget(QWidget):
             # Convert BGR to RGB for display
             rgb_image = cv2.cvtColor(self.current_image, cv2.COLOR_BGR2RGB)
             
-            # Update image display
-            self.display_image(rgb_image)
+            # Update image display - show in original container
+            self.display_original_image(rgb_image)
             
             # Update image info
             height, width, channels = self.current_image.shape
@@ -297,8 +346,8 @@ class ImageAnalysisWidget(QWidget):
             self.logger.error(f"Failed to load image: {e}")
             QMessageBox.critical(self, "Error", f"Failed to load image: {str(e)}")
             
-    def display_image(self, image_array):
-        """Display image in the container"""
+    def display_original_image(self, image_array):
+        """Display original image in the original container"""
         try:
             height, width, channels = image_array.shape
             bytes_per_line = channels * width
@@ -307,15 +356,37 @@ class ImageAnalysisWidget(QWidget):
             pixmap = QPixmap.fromImage(q_image)
             
             # Scale pixmap to fit container while maintaining aspect ratio
-            max_size = self.image_container.maximumSize()
+            max_size = self.original_container.maximumSize()
             scaled_pixmap = pixmap.scaled(
                 max_size, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
             )
             
-            self.image_container.setPixmap(scaled_pixmap)
+            self.original_container.setPixmap(scaled_pixmap)
+            self.original_container.setText("")  # Clear placeholder text
             
         except Exception as e:
-            self.logger.error(f"Failed to display image: {e}")
+            self.logger.error(f"Failed to display original image: {e}")
+            
+    def display_result_image(self, image_array):
+        """Display result image with bounding boxes in the result container"""
+        try:
+            height, width, channels = image_array.shape
+            bytes_per_line = channels * width
+            
+            q_image = QImage(image_array.data, width, height, bytes_per_line, QImage.Format.Format_RGB888)
+            pixmap = QPixmap.fromImage(q_image)
+            
+            # Scale pixmap to fit container while maintaining aspect ratio
+            max_size = self.result_container.maximumSize()
+            scaled_pixmap = pixmap.scaled(
+                max_size, Qt.AspectRatioMode.KeepAspectRatio, Qt.TransformationMode.SmoothTransformation
+            )
+            
+            self.result_container.setPixmap(scaled_pixmap)
+            self.result_container.setText("")  # Clear placeholder text
+            
+        except Exception as e:
+            self.logger.error(f"Failed to display result image: {e}")
             
     def start_analysis(self):
         """Start YOLOv5 analysis"""
@@ -387,7 +458,7 @@ class ImageAnalysisWidget(QWidget):
             # Draw bounding boxes on image
             image_with_boxes = self.draw_detections(self.current_image.copy(), result['detections'])
             rgb_image = cv2.cvtColor(image_with_boxes, cv2.COLOR_BGR2RGB)
-            self.display_image(rgb_image)
+            self.display_result_image(rgb_image)
             
             # Update results text
             detections = result['detections']

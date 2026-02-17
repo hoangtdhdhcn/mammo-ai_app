@@ -2,7 +2,7 @@
   "model": {
     "path": "D:\\4.TEACHING\\VibeCode\\breast_cancer_detection_app\\breast_cancer_detection_app\\models\\yolov5s.pt",
     "confidence_threshold": 0.3,
-    "iou_threshold": 0.35000000000000003,
+    "iou_threshold": 0.35,
     "device": "cpu"
   },
   "database": {

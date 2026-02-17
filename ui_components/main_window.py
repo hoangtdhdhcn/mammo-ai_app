@@ -25,7 +25,7 @@ class MainWindow(QMainWindow):
         
         self.config = config
         self.setWindowTitle("AI Breast Cancer Detection System")
-        self.setGeometry(100, 100, 1400, 900)
+        self.setGeometry(100, 100, 1280, 800)  # Reduced from 1600x1000 to 1280x800 (0.8x)
         
         # Setup UI
         self.setup_ui()

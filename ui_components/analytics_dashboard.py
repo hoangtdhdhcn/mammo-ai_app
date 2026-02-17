@@ -110,7 +110,7 @@ class AnalyticsDashboardWidget(QWidget):
         # Create horizontal splitter for charts
         h_splitter = QSplitter(Qt.Orientation.Horizontal)
         
-        # Left: Main Charts
+        # Left: Main Charts (with scroll area)
         left_panel = QWidget()
         left_layout = QVBoxLayout(left_panel)
         
@@ -118,21 +118,52 @@ class AnalyticsDashboardWidget(QWidget):
         charts_layout = QVBoxLayout()
         
         # Create matplotlib figure with 2x3 grid for more comprehensive analytics
-        self.figure, self.axes = plt.subplots(2, 3, figsize=(15, 10))
-        self.figure.tight_layout(pad=3.0)
+        self.figure, self.axes = plt.subplots(2, 3, figsize=(18, 20))
+        # self.figure.tight_layout(pad=10.0, h_pad=8.0, w_pad=6.0)
+        self.figure.subplots_adjust(
+            left=0.06,
+            right=0.97,
+            top=0.95,
+            bottom=0.06,
+            hspace=0.6,   # vertical spacing between rows (increase more if needed)
+            wspace=0.4    # horizontal spacing between columns
+        )
         
         self.canvas = FigureCanvas(self.figure)
         self.canvas.setMinimumHeight(500)
         
-        charts_layout.addWidget(self.canvas)
+        # Add canvas to scroll area for better handling of large charts
+        from PyQt6.QtWidgets import QScrollArea
+        charts_scroll = QScrollArea()
+        charts_scroll.setWidgetResizable(True)
+        charts_scroll.setStyleSheet("QScrollArea { border: 1px solid #cccccc; }")
+        
+        # Create a widget to hold the canvas
+        canvas_widget = QWidget()
+        canvas_layout = QVBoxLayout(canvas_widget)
+        canvas_layout.addWidget(self.canvas)
+        canvas_layout.addStretch()
+        
+        charts_scroll.setWidget(canvas_widget)
+        
+        charts_layout.addWidget(charts_scroll)
         charts_group.setLayout(charts_layout)
         
         left_layout.addWidget(charts_group)
         left_layout.addStretch()
         
-        # Right: Detailed Analysis
+        # Right: Detailed Analysis (with scroll area)
         right_panel = QWidget()
         right_layout = QVBoxLayout(right_panel)
+        
+        # Create scroll area for detailed analysis content
+        analysis_scroll = QScrollArea()
+        analysis_scroll.setWidgetResizable(True)
+        analysis_scroll.setStyleSheet("QScrollArea { border: 1px solid #cccccc; }")
+        
+        # Create a widget to hold all analysis content
+        analysis_content = QWidget()
+        analysis_content_layout = QVBoxLayout(analysis_content)
         
         # Patient comparison section
         comparison_group = QGroupBox("Patient Comparison")
@@ -178,15 +209,22 @@ class AnalyticsDashboardWidget(QWidget):
         export_layout.addLayout(export_buttons_layout)
         export_group.setLayout(export_layout)
         
-        right_layout.addWidget(comparison_group)
-        right_layout.addWidget(metrics_group)
-        right_layout.addWidget(export_group)
+        # Add all groups to the analysis content layout
+        analysis_content_layout.addWidget(comparison_group)
+        analysis_content_layout.addWidget(metrics_group)
+        analysis_content_layout.addWidget(export_group)
+        analysis_content_layout.addStretch()
+        
+        # Set the analysis content widget as the scroll area's widget
+        analysis_scroll.setWidget(analysis_content)
+        
+        right_layout.addWidget(analysis_scroll)
         right_layout.addStretch()
         
         # Add panels to horizontal splitter
         h_splitter.addWidget(left_panel)
         h_splitter.addWidget(right_panel)
-        h_splitter.setSizes([800, 400])
+        h_splitter.setSizes([1100, 400])
         
         bottom_layout.addWidget(h_splitter)
         
@@ -320,6 +358,7 @@ class AnalyticsDashboardWidget(QWidget):
             ax6.set_ylabel('Days')
             ax6.text(0, retention_days + retention_days*0.1, f'{retention_days} days', ha='center')
             
+            self.figure.tight_layout(pad=3.0)
             self.canvas.draw()
             
             # Update detailed analysis
@@ -451,6 +490,7 @@ class AnalyticsDashboardWidget(QWidget):
             ax6.set_title('Patient Engagement Analysis', fontweight='bold')
             ax6.set_ylabel('Engagement Score (0-100)')
             
+            self.figure.tight_layout(pad=3.0)
             self.canvas.draw()
             
             # Update detailed analysis
@@ -578,6 +618,7 @@ class AnalyticsDashboardWidget(QWidget):
             ax6.set_xlabel('Time Period')
             ax6.grid(True, alpha=0.3)
             
+            self.figure.tight_layout(pad=3.0)
             self.canvas.draw()
             
             # Update detailed analysis
@@ -658,9 +699,10 @@ class AnalyticsDashboardWidget(QWidget):
             ax1.set_xticklabels(categories)
             ax1.legend()
             
-            # Chart 2: Performance Benchmarks
+            # # Chart 2: Performance Benchmarks
             ax2 = self.axes[0, 1]
-            benchmarks = ['Processing Speed', 'Detection Accuracy', 'Memory Efficiency', 'User Satisfaction']
+            benchmarks = ['Processing Speed', 'Detection Accuracy', 'Memory Efficiency', 'User Satisfaction']   # need to fix
+
             current_scores = [85, 92, 78, 88]
             industry_scores = [80, 85, 75, 82]
             
@@ -679,7 +721,7 @@ class AnalyticsDashboardWidget(QWidget):
             
             # Chart 3: Quality Comparison
             ax3 = self.axes[0, 2]
-            quality_metrics = ['Detection Quality', 'Image Quality', 'Report Quality', 'User Experience']
+            quality_metrics = ['Detection Quality', 'Image Quality', 'Report Quality', 'User Experience']   # need to fix
             quality_scores = [95, 90, 88, 92]
             
             bars = ax3.bar(quality_metrics, quality_scores, color='gold')
@@ -728,6 +770,7 @@ class AnalyticsDashboardWidget(QWidget):
                 ax6.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 1,
                         f'+{value}%', ha='center')
             
+            self.figure.tight_layout(pad=3.0)
             self.canvas.draw()
             
             # Update detailed analysis
@@ -844,6 +887,7 @@ class AnalyticsDashboardWidget(QWidget):
                 ax6.text(bar.get_x() + bar.get_width()/2, bar.get_height() + 0.5,
                         f'{score}%', ha='center')
             
+            self.figure.tight_layout(pad=3.0)
             self.canvas.draw()
             
             # Update detailed analysis
@@ -876,9 +920,11 @@ class AnalyticsDashboardWidget(QWidget):
         try:
             for ax in self.axes.flat:
                 ax.clear()
-                ax.text(0.5, 0.5, 'Select analysis type to view charts', 
-                       horizontalalignment='center', verticalalignment='center',
-                       transform=ax.transAxes, fontsize=12, style='italic')
+                # ax.text(0.5, 0.5, 'Select analysis type to view charts', 
+                #        horizontalalignment='center', verticalalignment='center',
+                #        transform=ax.transAxes, fontsize=12, style='italic')
+                
+            self.figure.tight_layout(pad=3.0)
             self.canvas.draw()
         except Exception as e:
             self.logger.error(f"Failed to clear charts: {e}")
