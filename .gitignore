@@ -1,0 +1,9 @@
+__pycache__/
+
+.env
+breast-detection/
+database/
+logs/
+models/yolov5s.pt
+models/yolov5su.pt
+temp/

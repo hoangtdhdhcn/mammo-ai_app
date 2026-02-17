@@ -1,0 +1,43 @@
+{
+  "model": {
+    "path": "D:\\4.TEACHING\\VibeCode\\breast_cancer_detection_app\\breast_cancer_detection_app\\models\\yolov5s.pt",
+    "confidence_threshold": 0.3,
+    "iou_threshold": 0.35000000000000003,
+    "device": "cpu"
+  },
+  "database": {
+    "path": "D:\\4.TEACHING\\VibeCode\\breast_cancer_detection_app\\breast_cancer_detection_app\\database\\patients.db",
+    "backup_enabled": true,
+    "backup_interval_hours": 24
+  },
+  "ui": {
+    "theme": "dark",
+    "font_size": 12,
+    "icon_size": 24,
+    "window_width": 1400,
+    "window_height": 900
+  },
+  "image_processing": {
+    "supported_formats": [
+      ".png",
+      ".jpg",
+      ".jpeg",
+      ".dcm",
+      ".tiff"
+    ],
+    "max_image_size_mb": 50,
+    "resize_width": 1024,
+    "resize_height": 1024,
+    "quality_enhancement": true
+  },
+  "analytics": {
+    "enable_trend_analysis": true,
+    "history_retention_days": 365,
+    "export_formats": [
+      "pdf",
+      "excel",
+      "csv"
+    ],
+    "chart_theme": "medical"
+  }
+}
